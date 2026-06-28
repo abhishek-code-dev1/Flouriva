@@ -15,26 +15,48 @@ export interface Product {
   isBestseller?: boolean;
 }
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({
+  product,
+  onSelect,
+}: {
+  product: Product;
+  onSelect?: (id: string) => void;
+}) {
+  const handleClick = (e: React.MouseEvent) => {
+    // If user clicked the "+" add-to-cart button specifically, we don't open the modal
+    const target = e.target as HTMLElement;
+    if (target.closest('.add-to-cart-btn')) {
+      return;
+    }
+    if (onSelect) {
+      onSelect(product.id);
+    }
+  };
+
   return (
-    <div className="bg-bakery-brown/10 rounded-lg overflow-hidden border border-bakery-gold/10 hover:border-bakery-gold/30 flex flex-col h-full shadow-sm">
+    <motion.div
+      onClick={handleClick}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+      className="bg-bakery-brown/20 rounded-lg overflow-hidden border border-bakery-gold/10 hover:border-bakery-gold/40 hover:shadow-[0_0_15px_rgba(212,175,55,0.15)] flex flex-col h-full shadow-sm cursor-pointer group transition-all"
+    >
       <div className="relative h-28 w-full overflow-hidden">
         <Image
           src={product.image}
           alt={product.name}
           fill
           sizes="(max-width: 768px) 50vw, 15vw"
-          className="object-cover"
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
         />
         {product.isBestseller && (
-          <div className="absolute top-1 left-1 bg-bakery-gold text-bakery-dark text-[8px] font-bold px-1.5 py-0.5 rounded uppercase shadow-sm">
+          <div className="absolute top-1 left-1 bg-bakery-gold text-bakery-dark text-[8px] font-bold px-1.5 py-0.5 rounded uppercase shadow-sm z-10">
             Best
           </div>
         )}
       </div>
       
       <div className="p-2 flex flex-col flex-grow">
-        <h3 className="font-heading text-xs md:text-sm font-bold text-bakery-light leading-tight line-clamp-1 mb-1">
+        <h3 className="font-heading text-xs md:text-sm font-bold text-bakery-light leading-tight line-clamp-1 mb-1 group-hover:text-bakery-gold transition-colors">
           {product.name}
         </h3>
         <div className="flex items-center gap-1 mb-1">
@@ -46,11 +68,12 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="text-sm font-bold text-bakery-gold">
             ₹{product.price}
           </div>
-          <button className="w-6 h-6 rounded bg-bakery-gold/20 flex items-center justify-center text-bakery-gold hover:bg-bakery-gold hover:text-bakery-dark transition-colors">
+          <button className="add-to-cart-btn w-6 h-6 rounded bg-bakery-gold/20 flex items-center justify-center text-bakery-gold hover:bg-bakery-gold hover:text-bakery-dark transition-colors">
             <Plus size={14} />
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
+
