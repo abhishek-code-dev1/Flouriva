@@ -1,5 +1,6 @@
 "use client";
 
+import React, { memo } from "react";
 import Image from "next/image";
 
 const categories = [
@@ -13,7 +14,7 @@ const categories = [
   { name: "Wedding", image: "https://images.unsplash.com/photo-1535254973040-607b474cb50d?ixlib=rb-4.0.3&w=150&q=80" },
 ];
 
-export default function CategorySlider({
+function CategorySlider({
   onSelectCategory,
 }: {
   onSelectCategory?: (categoryName: string) => void;
@@ -33,8 +34,9 @@ export default function CategorySlider({
                   src={cat.image}
                   alt={cat.name}
                   fill
-                  sizes="80px"
+                  sizes="(max-width: 768px) 64px, 80px"
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
                 />
               </div>
               <span className="text-[10px] md:text-xs text-bakery-cream text-center font-medium leading-tight group-hover:text-bakery-gold transition-colors">{cat.name}</span>
@@ -45,3 +47,5 @@ export default function CategorySlider({
     </section>
   );
 }
+
+export default memo(CategorySlider);

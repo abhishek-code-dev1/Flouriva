@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -46,16 +46,16 @@ export default function ProductDetailView({
     setZoomScale(1);
   }, [product]);
 
-  // Handle WhatsApp Order Link
-  const getWhatsAppLink = () => {
+  // Handle WhatsApp Order Link (memoized)
+  const getWhatsAppLink = useCallback(() => {
     const text = encodeURIComponent(
       `Hello Flouriva Bakery! I'd like to order the "${product.name}" (${product.specifications.weight}) priced at ₹${product.price}. Please let me know the availability.`
     );
     return `https://wa.me/916307050806?text=${text}`;
-  };
+  }, [product.name, product.specifications.weight, product.price]);
 
-  // Handle mock review submission
-  const handleReviewSubmit = (e: React.FormEvent) => {
+  // Handle mock review submission (memoized)
+  const handleReviewSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewForm.name || !reviewForm.comment) return;
 
@@ -67,43 +67,52 @@ export default function ProductDetailView({
       date: new Date().toISOString().split("T")[0],
     };
 
-    setLocalReviews([newReview, ...localReviews]);
+    setLocalReviews((prev) => [newReview, ...prev]);
     setReviewForm({ name: "", rating: 5, comment: "" });
-  };
+  }, [reviewForm.name, reviewForm.rating, reviewForm.comment]);
 
-  // Find related products
-  const relatedProducts = products
-    .filter(
-      (p) =>
-        p.id !== product.id &&
-        (p.category === product.category ||
-          p.tags.some((t) => product.tags.includes(t)))
-    )
-    .slice(0, 4);
+  // Find related products (memoized)
+  const relatedProducts = useMemo(() => {
+    return products
+      .filter(
+        (p) =>
+          p.id !== product.id &&
+          (p.category === product.category ||
+            p.tags.some((t) => product.tags.includes(t)))
+      )
+      .slice(0, 4);
+  }, [product.id, product.category, product.tags]);
 
-  // Lightbox Zoom handlers
-  const handleZoomIn = () => setZoomScale((prev) => Math.min(prev + 0.5, 3));
-  const handleZoomOut = () => setZoomScale((prev) => Math.max(prev - 0.5, 1));
-  const resetZoom = () => setZoomScale(1);
+  // Lightbox Zoom handlers (memoized)
+  const handleZoomIn = useCallback(() => setZoomScale((prev) => Math.min(prev + 0.5, 3)), []);
+  const handleZoomOut = useCallback(() => setZoomScale((prev) => Math.max(prev - 0.5, 1)), []);
+  const resetZoom = useCallback(() => setZoomScale(1), []);
 
-  // Next/Prev gallery image
-  const handleNextImage = () => {
+  // Next/Prev gallery image (memoized)
+  const handleNextImage = useCallback(() => {
     setActiveImageIndex((prev) => (prev + 1) % product.images.length);
-  };
-  const handlePrevImage = () => {
+  }, [product.images.length]);
+
+  const handlePrevImage = useCallback(() => {
     setActiveImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
-  };
+  }, [product.images.length]);
 
-  // Review statistics
-  const averageRating = localReviews.length
-    ? (localReviews.reduce((sum, r) => sum + r.rating, 0) / localReviews.length).toFixed(1)
-    : product.rating;
+  // Review statistics (memoized)
+  const ratingStats = useMemo(() => {
+    const avg = localReviews.length
+      ? (localReviews.reduce((sum, r) => sum + r.rating, 0) / localReviews.length).toFixed(1)
+      : product.rating.toFixed(1);
 
-  const starCounts = [0, 0, 0, 0, 0];
-  localReviews.forEach((r) => {
-    const idx = Math.floor(r.rating) - 1;
-    if (idx >= 0 && idx < 5) starCounts[idx]++;
-  });
+    const counts = [0, 0, 0, 0, 0];
+    localReviews.forEach((r) => {
+      const idx = Math.floor(r.rating) - 1;
+      if (idx >= 0 && idx < 5) counts[idx]++;
+    });
+
+    return { averageRating: avg, starCounts: counts };
+  }, [localReviews, product.rating]);
+
+  const { averageRating, starCounts } = ratingStats;
 
   return (
     <div className="text-bakery-light pb-8">

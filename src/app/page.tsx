@@ -1,18 +1,54 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
+
+// Above the fold components are loaded statically for instant paint
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import CategorySlider from "@/components/CategorySlider";
 import ProductGrid from "@/components/ProductGrid";
-import OffersSection from "@/components/OffersSection";
-import AboutSection from "@/components/AboutSection";
-import ContactSection from "@/components/ContactSection";
-import Footer from "@/components/Footer";
-import FloatingActions from "@/components/FloatingActions";
-import ProductDetailModal from "@/components/ProductDetailModal";
-import CategoryProductsView from "@/components/CategoryProductsView";
+
+// Skeleton screen loaders for smooth transition & CLS prevention
+import {
+  SectionSkeleton,
+  ProductDetailModalSkeleton
+} from "@/components/Skeletons";
+
+// Below the fold sections are dynamically imported to defer JS loading
+const OffersSection = dynamic(() => import("@/components/OffersSection"), {
+  loading: () => <SectionSkeleton heightClass="h-28" />,
+  ssr: false,
+});
+
+const AboutSection = dynamic(() => import("@/components/AboutSection"), {
+  loading: () => <SectionSkeleton heightClass="h-48" />,
+  ssr: false,
+});
+
+const ContactSection = dynamic(() => import("@/components/ContactSection"), {
+  loading: () => <SectionSkeleton heightClass="h-64" />,
+  ssr: false,
+});
+
+const Footer = dynamic(() => import("@/components/Footer"), {
+  ssr: false,
+});
+
+const FloatingActions = dynamic(() => import("@/components/FloatingActions"), {
+  ssr: false,
+});
+
+// Conditionally rendered overlay components are dynamically imported
+const CategoryProductsView = dynamic(() => import("@/components/CategoryProductsView"), {
+  ssr: false,
+});
+
+const ProductDetailModal = dynamic(() => import("@/components/ProductDetailModal"), {
+  loading: () => <ProductDetailModalSkeleton />,
+  ssr: false,
+});
 
 export default function Home() {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -34,25 +70,35 @@ export default function Home() {
     return () => window.removeEventListener("popstate", handleUrlChange);
   }, []);
 
-  // Handle product select
-  const handleProductSelect = (id: string) => {
+  // Handle product select (memoized to prevent child re-renders)
+  const handleProductSelect = useCallback((id: string) => {
     setSelectedProductId(id);
     const newUrl = `${window.location.pathname}?product=${id}`;
     window.history.pushState({ product: id }, "", newUrl);
-  };
+  }, []);
 
-  // Handle modal close
-  const handleCloseModal = () => {
+  // Handle modal close (memoized to prevent child re-renders)
+  const handleCloseModal = useCallback(() => {
     setSelectedProductId(null);
     const newUrl = window.location.pathname;
     window.history.pushState({}, "", newUrl);
-  };
+  }, []);
+
+  // Handle category select (memoized to prevent child re-renders)
+  const handleCategorySelect = useCallback((categoryName: string) => {
+    setSelectedCategoryName(categoryName);
+  }, []);
+
+  // Handle category drawer close (memoized to prevent child re-renders)
+  const handleCloseCategoryDrawer = useCallback(() => {
+    setSelectedCategoryName(null);
+  }, []);
 
   return (
     <main className="min-h-screen bg-bakery-dark">
       <Navbar />
       <Hero />
-      <CategorySlider onSelectCategory={setSelectedCategoryName} />
+      <CategorySlider onSelectCategory={handleCategorySelect} />
       <ProductGrid onSelectProduct={handleProductSelect} />
       <OffersSection />
       <AboutSection />
@@ -65,7 +111,7 @@ export default function Home() {
         {selectedCategoryName && (
           <CategoryProductsView
             categoryName={selectedCategoryName}
-            onClose={() => setSelectedCategoryName(null)}
+            onClose={handleCloseCategoryDrawer}
             onSelectProduct={handleProductSelect}
           />
         )}
@@ -84,4 +130,3 @@ export default function Home() {
     </main>
   );
 }
-

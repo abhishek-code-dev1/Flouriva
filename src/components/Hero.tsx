@@ -1,5 +1,6 @@
 "use client";
 
+import React, { memo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
@@ -27,7 +28,7 @@ const banners = [
   }
 ];
 
-export default function Hero() {
+function Hero() {
   return (
     <section id="home" className="pt-20 pb-4 overflow-hidden">
       <div className="container mx-auto px-2 md:px-4">
@@ -45,7 +46,14 @@ export default function Hero() {
                 <button className="mt-2 bg-white text-black text-[10px] md:text-xs font-bold px-3 py-1 rounded-full w-fit">Order Now</button>
               </div>
               <div className="absolute -right-4 top-0 h-full w-1/2 rounded-full overflow-hidden scale-110 opacity-90">
-                <Image src={banner.image} alt={banner.title} fill sizes="(max-width: 768px) 150px, 200px" priority={true} className="object-cover" />
+                <Image
+                  src={banner.image}
+                  alt={banner.title}
+                  fill
+                  sizes="(max-width: 768px) 150px, 200px"
+                  priority={true} // Priority loading as these are above the fold
+                  className="object-cover"
+                />
               </div>
             </motion.div>
           ))}
@@ -54,3 +62,5 @@ export default function Hero() {
     </section>
   );
 }
+
+export default memo(Hero);

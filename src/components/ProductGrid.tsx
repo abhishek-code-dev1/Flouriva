@@ -1,10 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import React, { memo } from "react";
 import ProductCard from "./ProductCard";
 import { products } from "@/data/products";
 
-export default function ProductGrid({
+function ProductGrid({
   onSelectProduct,
 }: {
   onSelectProduct?: (id: string) => void;
@@ -34,3 +34,4 @@ export default function ProductGrid({
   );
 }
 
+export default memo(ProductGrid);

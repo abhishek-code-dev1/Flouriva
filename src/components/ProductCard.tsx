@@ -1,5 +1,6 @@
 "use client";
 
+import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { Plus, Star } from "lucide-react";
 import Image from "next/image";
@@ -15,7 +16,7 @@ export interface Product {
   isBestseller?: boolean;
 }
 
-export default function ProductCard({
+function ProductCard({
   product,
   onSelect,
 }: {
@@ -45,8 +46,10 @@ export default function ProductCard({
           src={product.image}
           alt={product.name}
           fill
-          sizes="(max-width: 768px) 50vw, 15vw"
+          // Fine-tuned to load lower resolution images based on grid column widths
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
           className="object-cover group-hover:scale-105 transition-transform duration-500"
+          loading="lazy"
         />
         {product.isBestseller && (
           <div className="absolute top-1 left-1 bg-bakery-gold text-bakery-dark text-[8px] font-bold px-1.5 py-0.5 rounded uppercase shadow-sm z-10">
@@ -77,3 +80,5 @@ export default function ProductCard({
   );
 }
 
+// Memoize to prevent re-renders unless the product reference or selection callbacks change
+export default memo(ProductCard);
